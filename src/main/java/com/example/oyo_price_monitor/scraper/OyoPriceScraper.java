@@ -1,11 +1,15 @@
 
         package com.example.oyo_price_monitor.scraper;
 
-import com.microsoft.playwright.*;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class OyoPriceScraper {
@@ -32,92 +36,87 @@ public class OyoPriceScraper {
             System.out.println("Adults: " + adults);
             System.out.println("Rooms: " + rooms);
 
+            // Open OYO hotel page
             page.navigate(hotelUrl);
 
+            // Wait for JavaScript-rendered content
             page.waitForTimeout(5000);
 
             System.out.println("Page title: " + page.title());
             System.out.println("Current URL: " + page.url());
 
-
-            // ============================
-            // PRINT BUTTONS
-            // ============================
-
-            System.out.println("\n========== BUTTONS ==========");
-
-            Locator buttons = page.locator("button");
-
-            int buttonCount = buttons.count();
-
-            System.out.println("Total buttons: " + buttonCount);
-
-            for (int i = 0; i < buttonCount; i++) {
-
-                String text = buttons.nth(i).innerText().trim();
-
-                if (!text.isEmpty()) {
-                    System.out.println(
-                            "Button [" + i + "] = " + text
-                    );
-                }
-            }
-
-
-            // ============================
-            // PRINT INPUTS
-            // ============================
-
-            System.out.println("\n========== INPUTS ==========");
-
-            Locator inputs = page.locator("input");
-
-            int inputCount = inputs.count();
-
-            System.out.println("Total inputs: " + inputCount);
-
-            for (int i = 0; i < inputCount; i++) {
-
-                Locator input = inputs.nth(i);
-
-                System.out.println(
-                        "Input [" + i + "]"
-                                + " type=" + input.getAttribute("type")
-                                + " placeholder=" + input.getAttribute("placeholder")
-                );
-            }
-
-
-            // ============================
-            // PAGE TEXT
-            // ============================
-
-            System.out.println("\n========== PAGE TEXT ==========");
-
+            // Get complete visible page text
             String text = page.locator("body").innerText();
 
-            System.out.println(
-                    text.substring(
-                            0,
-                            Math.min(text.length(), 5000)
-                    )
+            System.out.println("\n========== SEARCHING PRICE ==========");
+
+            /*
+             * Expected OYO text:
+             *
+             * Total price
+             * ₹1502
+             *
+             * Regex allows spaces/newlines between
+             * "Total price" and the rupee amount.
+             */
+
+            Pattern totalPricePattern = Pattern.compile(
+                    "Total\\s+price\\s*[\\r\\n\\s]*₹\\s*([0-9,]+)",
+                    Pattern.CASE_INSENSITIVE
             );
 
+            Matcher matcher = totalPricePattern.matcher(text);
 
-            // Screenshot
-            page.screenshot(
-                    new Page.ScreenshotOptions()
-                            .setPath(Paths.get("oyo-page.png"))
-                            .setFullPage(true)
+            if (matcher.find()) {
+
+                String priceText = matcher.group(1);
+
+                double totalPrice = Double.parseDouble(
+                        priceText.replace(",", "")
+                );
+
+                System.out.println(
+                        "Total price found: ₹" + totalPrice
+                );
+
+                browser.close();
+
+                return totalPrice;
+            }
+
+            // Fallback: try to find room price
+            Pattern roomPricePattern = Pattern.compile(
+                    "Classic\\s*[\\r\\n\\s]*₹\\s*([0-9,]+)",
+                    Pattern.CASE_INSENSITIVE
             );
 
+            Matcher roomMatcher = roomPricePattern.matcher(text);
 
-            // Keep browser open
-            page.waitForTimeout(30000);
+            if (roomMatcher.find()) {
+
+                String priceText = roomMatcher.group(1);
+
+                double roomPrice = Double.parseDouble(
+                        priceText.replace(",", "")
+                );
+
+                System.out.println(
+                        "Room price found: ₹" + roomPrice
+                );
+
+                browser.close();
+
+                return roomPrice;
+            }
+
+            // Price couldn't be found
+            System.out.println("PRICE NOT FOUND");
 
             browser.close();
 
-            return 0;
+            throw new RuntimeException(
+                    "Unable to extract OYO price from page"
+            );
         }
     }
 }

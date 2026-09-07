@@ -1,9 +1,11 @@
-package com.example.oyo_price_monitor.controller;
 
-import com.example.oyo_price_monitor.scraper.OyoPriceScraper;
+        package com.example.oyo_price_monitor.controller;
+
 import com.example.oyo_price_monitor.dto.HotelMonitorRequest;
 import com.example.oyo_price_monitor.entity.HotelMonitor;
+import com.example.oyo_price_monitor.entity.PriceHistory;
 import com.example.oyo_price_monitor.service.HotelMonitorService;
+import com.example.oyo_price_monitor.service.TelegramNotificationService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,18 +14,16 @@ import java.util.List;
 @RequestMapping("/api/monitors")
 public class HotelMonitorController {
 
-    private final OyoPriceScraper scraper;
-
     private final HotelMonitorService service;
+    private final TelegramNotificationService telegramNotificationService;
 
     public HotelMonitorController(
             HotelMonitorService service,
-            OyoPriceScraper scraper) {
+            TelegramNotificationService telegramNotificationService) {
 
         this.service = service;
-        this.scraper = scraper;
+        this.telegramNotificationService = telegramNotificationService;
     }
-
     @PostMapping
     public HotelMonitor addMonitor(
             @RequestBody HotelMonitorRequest request) {
@@ -36,19 +36,26 @@ public class HotelMonitorController {
 
         return service.getAllMonitors();
     }
+
     @GetMapping("/{id}/check")
     public String checkPrice(@PathVariable Long id) {
+        return service.checkPrice(id);
+    }
 
-        HotelMonitor monitor = service.getMonitor(id);
+    @GetMapping("/{id}/history")
+    public List<PriceHistory> getPriceHistory(
+            @PathVariable Long id) {
 
-        double price = scraper.getPrice(
-                monitor.getHotelUrl(),
-                monitor.getCheckIn(),
-                monitor.getCheckOut(),
-                monitor.getAdults(),
-                monitor.getRooms()
+        return service.getPriceHistory(id);
+    }
+    @GetMapping("/test-telegram")
+    public String testTelegram() {
+
+        telegramNotificationService.sendMessage(
+                "🚨 OYO Price Monitor Test\n\n" +
+                        "Telegram notification is working successfully! ✅"
         );
 
-        return "Current price: ₹" + price;
+        return "Telegram message sent!";
     }
 }

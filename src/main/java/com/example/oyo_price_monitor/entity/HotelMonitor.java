@@ -12,18 +12,15 @@ public class HotelMonitor {
     private Long id;
 
     private String hotelUrl;
-
     private LocalDate checkIn;
-
     private LocalDate checkOut;
-
     private int adults;
-
     private int rooms;
-
     private double targetPrice;
-
     private boolean active;
+
+    // Prevent duplicate Telegram alerts
+    private boolean alertSent;
 
     public HotelMonitor() {
     }
@@ -86,5 +83,13 @@ public class HotelMonitor {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isAlertSent() {
+        return alertSent;
+    }
+
+    public void setAlertSent(boolean alertSent) {
+        this.alertSent = alertSent;
     }
 }
