@@ -6,6 +6,7 @@ import com.example.oyo_price_monitor.entity.HotelMonitor;
 import com.example.oyo_price_monitor.entity.PriceHistory;
 import com.example.oyo_price_monitor.service.HotelMonitorService;
 import com.example.oyo_price_monitor.service.TelegramNotificationService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class HotelMonitorController {
     }
     @PostMapping
     public HotelMonitor addMonitor(
-            @RequestBody HotelMonitorRequest request) {
+            @Valid @RequestBody HotelMonitorRequest request) {
 
         return service.addMonitor(request);
     }
