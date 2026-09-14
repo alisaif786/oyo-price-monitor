@@ -1,5 +1,4 @@
-
-        package com.example.oyo_price_monitor.controller;
+package com.example.oyo_price_monitor.controller;
 
 import com.example.oyo_price_monitor.dto.HotelMonitorRequest;
 import com.example.oyo_price_monitor.entity.HotelMonitor;
@@ -58,5 +57,9 @@ public class HotelMonitorController {
         );
 
         return "Telegram message sent!";
+    }
+    @GetMapping("/{id}")
+    public HotelMonitor getMonitor(@PathVariable Long id) {
+        return service.getMonitor(id);
     }
 }
