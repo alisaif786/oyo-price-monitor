@@ -1,5 +1,4 @@
-
-        package com.example.oyo_price_monitor.scraper;
+package com.example.oyo_price_monitor.scraper;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
@@ -56,7 +55,7 @@ public class OyoPriceScraper {
              * Total price
              * ₹1502
              *
-             * Regex allows spaces/newlines between
+             * Regex allows spaces/newlines betweennnnn
              * "Total price" and the rupee amount.
              */
 
