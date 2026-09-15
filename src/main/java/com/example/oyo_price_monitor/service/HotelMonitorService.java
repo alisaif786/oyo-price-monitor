@@ -39,6 +39,13 @@ public class HotelMonitorService {
 
     public HotelMonitor addMonitor(HotelMonitorRequest request) {
 
+        // Validate date rangeee, Like user cannot add checkout date before than checkkk in!!!
+        if (!request.getCheckIn().isBefore(request.getCheckOut())) {
+            throw new IllegalArgumentException(
+                    "Check-in date must be before check-out date"
+            );
+        }
+
         HotelMonitor monitor = new HotelMonitor();
 
         monitor.setHotelUrl(request.getHotelUrl());
@@ -50,24 +57,19 @@ public class HotelMonitorService {
 
         monitor.setActive(true);
 
-        // New monitor has not received an alert yet
+        // New monitor has not received an alert yettt
         monitor.setAlertSent(false);
-
         HotelMonitor savedMonitor = repository.save(monitor);
-
         log.info(
                 "New hotel monitor created successfully. Monitor ID: {}, Target Price: ₹{}",
                 savedMonitor.getId(),
                 savedMonitor.getTargetPrice()
         );
-
         return savedMonitor;
     }
 
     public List<HotelMonitor> getAllMonitors() {
-
         log.debug("Fetching all hotel monitors");
-
         return repository.findAll();
     }
 
@@ -101,15 +103,12 @@ public class HotelMonitorService {
         }
 
         if (!monitor.isActive()) {
-
             log.warn(
                     "Price check skipped because monitor {} is inactive",
                     monitorId
             );
-
             return "Monitoring is inactive";
         }
-
         log.info(
                 "Scraping OYO price for monitor {}. URL: {}",
                 monitorId,
@@ -145,7 +144,7 @@ public class HotelMonitorService {
                 currentPrice
         );
 
-        // PRICE IS BELOW OR EQUAL TO TARGET
+        // PRICE IS BELOW OR EQUAL TO TARGETTTT
         if (currentPrice <= monitor.getTargetPrice()) {
 
             log.info(
@@ -155,7 +154,7 @@ public class HotelMonitorService {
                     monitor.getTargetPrice()
             );
 
-            // Send alert ONLY if alert was not already sent
+            // Send alert onlyy if alert was not already senttt
             if (!monitor.isAlertSent()) {
 
                 String message =
@@ -167,7 +166,7 @@ public class HotelMonitorService {
 
                 telegramNotificationService.sendMessage(message);
 
-                // Mark alert as sent
+                // Mark alert as sentttt
                 monitor.setAlertSent(true);
                 repository.save(monitor);
 
@@ -177,13 +176,11 @@ public class HotelMonitorService {
                 );
 
             } else {
-
                 log.info(
                         "Alert already sent for monitor {}. Skipping duplicate notification.",
                         monitorId
                 );
             }
-
             return "PRICE DROP! Current price: ₹"
                     + currentPrice
                     + ", Target price: ₹"
@@ -219,11 +216,7 @@ public class HotelMonitorService {
 
     public List<PriceHistory> getPriceHistory(Long monitorId) {
 
-        log.debug(
-                "Fetching price history for monitor {}",
-                monitorId
-        );
-
+        log.debug("Fetching price history for monitor {}", monitorId);
         getMonitor(monitorId);
 
         return priceHistoryRepository
