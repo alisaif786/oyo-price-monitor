@@ -45,3 +45,15 @@ export async function getPriceHistory(id) {
 
     return response.json()
 }
+
+export async function deleteMonitor(id) {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+        method: 'DELETE',
+    })
+
+    if (!response.ok) {
+        throw new Error('Failed to delete monitor')
+    }
+
+    return response.text()
+}

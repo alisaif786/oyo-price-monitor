@@ -7,6 +7,7 @@ import com.example.oyo_price_monitor.exception.ResourceNotFoundException;
 import com.example.oyo_price_monitor.repository.HotelMonitorRepository;
 import com.example.oyo_price_monitor.repository.PriceHistoryRepository;
 import com.example.oyo_price_monitor.scraper.OyoPriceScraper;
+import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -221,5 +222,18 @@ public class HotelMonitorService {
 
         return priceHistoryRepository
                 .findByMonitorIdOrderByCheckedAtDesc(monitorId);
+    }
+
+    @Transactional
+    public void deleteMonitor(Long id) {
+        HotelMonitor monitor = getMonitor(id);
+
+        // Delete price history first because it references the monitor
+        priceHistoryRepository.deleteByMonitorId(id);
+
+        // Now delete the monitorrr
+        repository.delete(monitor);
+
+        log.info("Hotel monitor deleted successfully. Monitor ID: {}", id);
     }
 }

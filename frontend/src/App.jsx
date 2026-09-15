@@ -4,6 +4,7 @@ import {
   getMonitors,
   createMonitor,
   checkMonitor,
+  deleteMonitor,
 } from './api'
 
 function App() {
@@ -53,10 +54,7 @@ function App() {
         hotelUrl: form.hotelUrl,
         checkIn: form.checkIn,
         checkOut: form.checkOut,
-
-        // Backend expects "adults", not "guests"
         adults: Number(form.guests),
-
         rooms: Number(form.rooms),
         targetPrice: Number(form.targetPrice),
       })
@@ -89,6 +87,27 @@ function App() {
     } catch (err) {
       console.error(err)
       setError('Failed to check price.')
+    }
+  }
+
+  async function handleDelete(id) {
+    const confirmed = window.confirm(
+        `Are you sure you want to delete Monitor #${id}?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setError('')
+
+      await deleteMonitor(id)
+
+      await loadMonitors()
+    } catch (err) {
+      console.error(err)
+      setError('Failed to delete monitor.')
     }
   }
 
@@ -269,7 +288,9 @@ function App() {
 
                         <div>
                           <span>Guests</span>
-                          <strong>{monitor.guests ?? monitor.adults}</strong>
+                          <strong>
+                            {monitor.guests ?? monitor.adults}
+                          </strong>
                         </div>
 
                         <div>
@@ -312,6 +333,13 @@ function App() {
                             }
                         >
                           Price History
+                        </button>
+
+                        <button
+                            className="delete-button"
+                            onClick={() => handleDelete(monitor.id)}
+                        >
+                          Delete
                         </button>
                       </div>
                     </div>

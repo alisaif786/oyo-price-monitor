@@ -62,4 +62,12 @@ public class HotelMonitorController {
     public HotelMonitor getMonitor(@PathVariable Long id) {
         return service.getMonitor(id);
     }
+
+    @DeleteMapping("/{id}")
+    public String deleteMonitor(@PathVariable Long id) {
+
+        service.deleteMonitor(id);
+
+        return "Monitor deleted successfully";
+    }
 }

@@ -458,7 +458,8 @@ button {
 }
 
 .check-button,
-.history-button {
+.history-button,
+.delete-button {
   padding: 9px 13px;
 
   border-radius: 6px;
@@ -489,6 +490,27 @@ button {
 .history-button:hover {
   color: white;
   border-color: #444;
+}
+
+/* =========================
+   DELETE BUTTON
+========================= */
+
+.delete-button {
+  background: #111;
+  border: 1px solid #4a2025;
+  color: #ff5575;
+}
+
+.delete-button:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.2);
+}
+
+.delete-button:active {
+  transform: scale(0.97);
 }
 
 /* =========================
@@ -556,5 +578,9 @@ button {
 
   .monitor-details {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .monitor-actions {
+    flex-wrap: wrap;
   }
 }
