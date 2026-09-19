@@ -24,7 +24,7 @@ public class OyoPriceScraper {
 
             Browser browser = playwright.chromium().launch(
                     new BrowserType.LaunchOptions()
-                            .setHeadless(false)
+                            .setHeadless(true)
             );
 
             Page page = browser.newPage();
@@ -35,10 +35,10 @@ public class OyoPriceScraper {
             System.out.println("Adults: " + adults);
             System.out.println("Rooms: " + rooms);
 
-            // Open OYO hotel page
+            // Open OYO hotel pageee
             page.navigate(hotelUrl);
 
-            // Wait for JavaScript-rendered content
+            // Wait for JavaScript-rendered contentt
             page.waitForTimeout(5000);
 
             System.out.println("Page title: " + page.title());
@@ -55,7 +55,7 @@ public class OyoPriceScraper {
              * Total price
              * ₹1502
              *
-             * Regex allows spaces/newlines betweennnnn
+             * Regex allows spaces/newlines between
              * "Total price" and the rupee amount.
              */
 
@@ -67,9 +67,7 @@ public class OyoPriceScraper {
             Matcher matcher = totalPricePattern.matcher(text);
 
             if (matcher.find()) {
-
                 String priceText = matcher.group(1);
-
                 double totalPrice = Double.parseDouble(
                         priceText.replace(",", "")
                 );
@@ -83,7 +81,7 @@ public class OyoPriceScraper {
                 return totalPrice;
             }
 
-            // Fallback: try to find room price
+            // Fallback: try to find room priceee
             Pattern roomPricePattern = Pattern.compile(
                     "Classic\\s*[\\r\\n\\s]*₹\\s*([0-9,]+)",
                     Pattern.CASE_INSENSITIVE
@@ -119,4 +117,3 @@ public class OyoPriceScraper {
         }
     }
 }
-

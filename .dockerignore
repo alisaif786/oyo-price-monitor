@@ -1,0 +1,9 @@
+target/
+.git/
+.gitignore
+data/
+frontend/node_modules/
+frontend/dist/
+.idea/
+.vscode/
+*.log
