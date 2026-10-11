@@ -19,7 +19,7 @@ public class HotelMonitor {
     private double targetPrice;
     private boolean active;
 
-    // Prevent duplicate Telegram alerts
+    // forrr Prevent duplicate Telegram alerts
     private boolean alertSent;
 
     public HotelMonitor() {
