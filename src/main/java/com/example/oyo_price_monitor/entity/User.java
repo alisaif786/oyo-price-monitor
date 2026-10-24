@@ -1,9 +1,20 @@
 package com.example.oyo_price_monitor.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name="users")
+@Getter
+@Setter
+@NoArgsConstructor
 public class User {
 
 
@@ -13,53 +24,19 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
+    @Column(nullable = false)
     private String password;
     private String telegramChatId;
-
+    private String telegramToken;
     private boolean telegramConnected;
-    public User(){
-
-    }
-    public Long getId(){
-        return id;
-    }
-
-    public String getEmail(){
-        return email;
-    }
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @JsonManagedReference
+    private List<HotelMonitor> monitors = new ArrayList<>();
 
 
-    public void setEmail(String email){
-        this.email=email;
-    }
-
-
-    public String getPassword(){
-        return password;
-    }
-
-
-    public void setPassword(String password){
-        this.password=password;
-    }
-
-
-    public String getTelegramChatId(){
-        return telegramChatId;
-    }
-
-
-    public void setTelegramChatId(String telegramChatId){
-        this.telegramChatId=telegramChatId;
-    }
-
-    public boolean isTelegramConnected(){
-        return telegramConnected;
-    }
-
-
-    public void setTelegramConnected(boolean telegramConnected){
-        this.telegramConnected=telegramConnected;
-    }
 
 }

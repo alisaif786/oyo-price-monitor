@@ -32,7 +32,7 @@ public class PriceMonitoringScheduler {
         log.info("========== AUTOMATIC PRICE CHECK STARTED ==========");
 
         List<HotelMonitor> monitors =
-                hotelMonitorRepository.findByActiveTrue();
+                hotelMonitorService.getActiveMonitors();
 
         log.info(
                 "Found {} active hotel monitors",
@@ -49,7 +49,7 @@ public class PriceMonitoringScheduler {
                 );
 
                 String result =
-                        hotelMonitorService.checkPrice(monitor.getId());
+                        hotelMonitorService.checkPriceInternal(monitor);
 
                 log.info(
                         "Monitor ID: {} check completed. Result: {}",

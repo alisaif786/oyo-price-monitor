@@ -3,6 +3,7 @@ package com.example.oyo_price_monitor.service;
 import com.example.oyo_price_monitor.dto.HotelMonitorRequest;
 import com.example.oyo_price_monitor.entity.HotelMonitor;
 import com.example.oyo_price_monitor.entity.PriceHistory;
+import com.example.oyo_price_monitor.entity.User;
 import com.example.oyo_price_monitor.exception.ResourceNotFoundException;
 import com.example.oyo_price_monitor.repository.HotelMonitorRepository;
 import com.example.oyo_price_monitor.repository.PriceHistoryRepository;
@@ -38,7 +39,7 @@ public class HotelMonitorService {
         this.telegramNotificationService = telegramNotificationService;
     }
 
-    public HotelMonitor addMonitor(HotelMonitorRequest request) {
+    public HotelMonitor addMonitor(HotelMonitorRequest request, User user) {
 
         // Validate date rangeee, Like user cannot add checkout date before than checkkk in!!!
         if (!request.getCheckIn().isBefore(request.getCheckOut())) {
@@ -56,6 +57,8 @@ public class HotelMonitorService {
         monitor.setRooms(request.getRooms());
         monitor.setTargetPrice(request.getTargetPrice());
 
+        monitor.setUser(user);
+
         monitor.setActive(true);
 
         // New monitor has not received an alert yettt
@@ -68,51 +71,54 @@ public class HotelMonitorService {
         );
         return savedMonitor;
     }
-
-    public List<HotelMonitor> getAllMonitors() {
-        log.debug("Fetching all hotel monitors");
-        return repository.findAll();
+    //chnaged method so that every user can see only his monitoring
+    public List<HotelMonitor> getAllMonitors(User user) {
+        return repository.findByUser(user);
     }
 
-    public HotelMonitor getMonitor(Long id) {
+    public HotelMonitor getMonitor(Long id, User user) {
 
-        log.debug("Fetching hotel monitor with ID: {}", id);
-
-        return repository.findById(id)
+        return repository.findByIdAndUser(id, user)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Monitor with id " + id + " not found"
+                                "Monitor with "+id +" not found"
                         ));
     }
 
-    public String checkPrice(Long monitorId) {
+    public String checkPrice(Long monitorId, User user) {
 
-        log.info("Starting price check for monitor ID: {}", monitorId);
+        HotelMonitor monitor = getMonitor(monitorId, user);
 
-        HotelMonitor monitor = getMonitor(monitorId);
+        return checkPriceInternal(monitor);
 
-        // Defensive check for invalid database data
-        if (monitor.getHotelUrl() == null ||
-                monitor.getHotelUrl().isBlank()) {
+    }
+    public String checkPriceInternal(HotelMonitor monitor) {
+
+        log.info("Starting price check for monitor ID: {}", monitor.getId());
+
+        if (monitor.getHotelUrl() == null || monitor.getHotelUrl().isBlank()) {
 
             log.error(
                     "Monitor {} has an invalid hotel URL. Skipping price check.",
-                    monitorId
+                    monitor.getId()
             );
 
             return "Invalid hotel URL";
         }
 
         if (!monitor.isActive()) {
+
             log.warn(
                     "Price check skipped because monitor {} is inactive",
-                    monitorId
+                    monitor.getId()
             );
+
             return "Monitoring is inactive";
         }
+
         log.info(
                 "Scraping OYO price for monitor {}. URL: {}",
-                monitorId,
+                monitor.getId(),
                 monitor.getHotelUrl()
         );
 
@@ -126,107 +132,71 @@ public class HotelMonitorService {
 
         log.info(
                 "Price scraped successfully for monitor {}. Current price: ₹{}",
-                monitorId,
+                monitor.getId(),
                 currentPrice
         );
 
-        // Save price history
-        PriceHistory priceHistory = new PriceHistory();
+        PriceHistory history = new PriceHistory();
+        history.setMonitor(monitor);
+        history.setPrice(currentPrice);
+        history.setCheckedAt(LocalDateTime.now());
 
-        priceHistory.setMonitor(monitor);
-        priceHistory.setPrice(currentPrice);
-        priceHistory.setCheckedAt(LocalDateTime.now());
+        priceHistoryRepository.save(history);
 
-        priceHistoryRepository.save(priceHistory);
-
-        log.info(
-                "Price history saved for monitor {}. Price: ₹{}",
-                monitorId,
-                currentPrice
-        );
-
-        // PRICE IS BELOW OR EQUAL TO TARGETTTT
         if (currentPrice <= monitor.getTargetPrice()) {
 
-            log.info(
-                    "Price target reached for monitor {}. Current: ₹{}, Target: ₹{}",
-                    monitorId,
-                    currentPrice,
-                    monitor.getTargetPrice()
-            );
-
-            // Send alert onlyy if alert was not already senttt
             if (!monitor.isAlertSent()) {
 
-                String message =
-                        "🚨 OYO PRICE DROP!\n\n" +
-                                "Hotel: " + monitor.getHotelUrl() + "\n" +
-                                "Current Price: ₹" + currentPrice + "\n" +
-                                "Target Price: ₹" + monitor.getTargetPrice() + "\n\n" +
-                                "Book now before the price increases!";
+                User owner = monitor.getUser();
+                if (owner != null
+                        && owner.isTelegramConnected()
+                        && owner.getTelegramChatId() != null
+                        && !owner.getTelegramChatId().isBlank()) {
 
-                telegramNotificationService.sendMessage(message);
+                    String message =
+                            "🚨 OYO PRICE DROP!\n\n" +
+                                    "Hotel: " + monitor.getHotelUrl() + "\n" +
+                                    "Current Price: ₹" + currentPrice + "\n" +
+                                    "Target Price: ₹" + monitor.getTargetPrice() + "\n\n" +
+                                    "Book now before the price increases!";
 
-                // Mark alert as sentttt
+                    telegramNotificationService.sendMessage(
+                            owner.getTelegramChatId(),
+                            message
+                    );
+                }
                 monitor.setAlertSent(true);
                 repository.save(monitor);
-
-                log.info(
-                        "Telegram price-drop alert sent successfully for monitor {}. alertSent = true",
-                        monitorId
-                );
-
-            } else {
-                log.info(
-                        "Alert already sent for monitor {}. Skipping duplicate notification.",
-                        monitorId
-                );
             }
+
             return "PRICE DROP! Current price: ₹"
                     + currentPrice
                     + ", Target price: ₹"
                     + monitor.getTargetPrice();
         }
 
-        // PRICE IS ABOVE TARGET
-        // Reset alert so a future price drop can trigger
-        // a new notification
         if (monitor.isAlertSent()) {
-
             monitor.setAlertSent(false);
             repository.save(monitor);
-
-            log.info(
-                    "Price is above target for monitor {}. alertSent reset to false.",
-                    monitorId
-            );
         }
-
-        log.info(
-                "Price is still above target for monitor {}. Current: ₹{}, Target: ₹{}",
-                monitorId,
-                currentPrice,
-                monitor.getTargetPrice()
-        );
 
         return "Price is still above target. Current price: ₹"
                 + currentPrice
                 + ", Target price: ₹"
                 + monitor.getTargetPrice();
     }
-
-    public List<PriceHistory> getPriceHistory(Long monitorId) {
+    public List<PriceHistory> getPriceHistory(Long monitorId, User user) {
 
         log.debug("Fetching price history for monitor {}", monitorId);
-        getMonitor(monitorId);
+        getMonitor(monitorId, user);
 
         return priceHistoryRepository
                 .findByMonitorIdOrderByCheckedAtDesc(monitorId);
     }
 
     @Transactional
-    public void deleteMonitor(Long id) {
-        HotelMonitor monitor = getMonitor(id);
+    public void deleteMonitor(Long id, User user) {
+        HotelMonitor monitor = getMonitor(id, user);
 
         // Delete price history first because it references the monitor
         priceHistoryRepository.deleteByMonitorId(id);
@@ -235,5 +205,8 @@ public class HotelMonitorService {
         repository.delete(monitor);
 
         log.info("Hotel monitor deleted successfully. Monitor ID: {}", id);
+    }
+    public List<HotelMonitor> getActiveMonitors() {
+        return repository.findByActiveTrue();
     }
 }

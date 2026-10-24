@@ -12,12 +12,9 @@ public class TelegramNotificationService {
     @Value("${telegram.bot.token}")
     private String botToken;
 
-    @Value("${telegram.chat.id}")
-    private String chatId;
-
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public void sendMessage(String message) {
+    public void sendMessage(String chatId, String message) {
 
         String url = "https://api.telegram.org/bot"
                 + botToken

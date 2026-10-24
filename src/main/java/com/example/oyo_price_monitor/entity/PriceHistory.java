@@ -1,12 +1,16 @@
-
-        package com.example.oyo_price_monitor.entity;
+package com.example.oyo_price_monitor.entity;
 
 import jakarta.persistence.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "price_history")
+@Getter
+@Setter
+@NoArgsConstructor
 public class PriceHistory {
 
     @Id
@@ -23,31 +27,4 @@ public class PriceHistory {
     @Column(nullable = false)
     private LocalDateTime checkedAt;
 
-    public Long getId() {
-        return id;
-    }
-
-    public HotelMonitor getMonitor() {
-        return monitor;
-    }
-
-    public void setMonitor(HotelMonitor monitor) {
-        this.monitor = monitor;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public LocalDateTime getCheckedAt() {
-        return checkedAt;
-    }
-
-    public void setCheckedAt(LocalDateTime checkedAt) {
-        this.checkedAt = checkedAt;
-    }
 }
