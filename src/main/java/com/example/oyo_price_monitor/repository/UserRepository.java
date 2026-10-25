@@ -13,4 +13,5 @@ public interface UserRepository
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByTelegramToken(String telegramToken);
 }

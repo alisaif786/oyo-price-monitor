@@ -26,4 +26,22 @@ public class TelegramService {
 
         return token;
     }
+
+    public boolean connectUser(String token, String chatId) {
+
+        User user = userRepository.findByTelegramToken(token)
+                .orElse(null);
+
+        if (user == null) {
+            return false;
+        }
+
+        user.setTelegramChatId(chatId);
+        user.setTelegramConnected(true);
+        user.setTelegramToken(null);
+
+        userRepository.save(user);
+
+        return true;
+    }
 }

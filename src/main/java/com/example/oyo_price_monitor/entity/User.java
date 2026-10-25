@@ -37,6 +37,4 @@ public class User {
     @JsonManagedReference
     private List<HotelMonitor> monitors = new ArrayList<>();
 
-
-
 }
