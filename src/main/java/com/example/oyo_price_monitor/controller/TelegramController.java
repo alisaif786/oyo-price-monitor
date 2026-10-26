@@ -23,4 +23,15 @@ public class TelegramController {
                 Map.of("token", token)
         );
     }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Boolean>> getStatus() {
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "connected",
+                        telegramService.isTelegramConnected()
+                )
+        );
+    }
 }

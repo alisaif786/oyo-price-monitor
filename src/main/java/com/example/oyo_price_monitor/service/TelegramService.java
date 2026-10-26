@@ -31,17 +31,17 @@ public class TelegramService {
 
         User user = userRepository.findByTelegramToken(token)
                 .orElse(null);
-
         if (user == null) {
             return false;
         }
-
         user.setTelegramChatId(chatId);
         user.setTelegramConnected(true);
         user.setTelegramToken(null);
-
         userRepository.save(user);
-
         return true;
+    }
+    public boolean isTelegramConnected() {
+        User user = userService.getLoggedInUser();
+        return user.isTelegramConnected();
     }
 }
